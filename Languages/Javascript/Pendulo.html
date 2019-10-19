@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0>
+		<style>
+			body {
+				padding: 0;
+				margin: 0;
+			}
+		</style>
+
+		<script>
+			const borderWidth = 3;
+			var h;
+			if (2 * window.innerHeight > window.innerWidth) h = window.innerWidth / 2;
+			else h = window.innerHeight;      //selecting the lower dimension
+			const w = 2 * h;
+
+			var thk = 4;                   //thickness of arm
+			const n = 2;                  //no. of arms(1=simple, 2=double, etc) 
+			const l = (h - 30) / n; //length of one arm
+			var s_r;
+			var r;
+			const g = 1;               //gravity
+			var m = 1;
+			const x = w / 2;           //
+			const y = 15;        //starting position
+			var arms = [];         //array of Arm objects
+			var pt = new Array(n);//tangential component of pull by arms[i+1] on arms[i]
+			var pr = new Array(n);//radial     component "   "   "     "      "     "
+
+
+			var cnv;
+			var ovr;
+
+			function setup() {
+				cnv = createCanvas(w, h);
+				ovr = createGraphics(2 * w, 2 * h);
+				fill(0);
+				ovr.stroke(0);
+				ovr.strokeWeight(4);
+
+				//Sliders
+				s_r = createSlider(5, l / 2, 10, 2);
+
+				//Support for Arm objects
+				pt[0] = 0;
+				pr[0] = 0;
+				for (var j = 0; j < n; j++) {
+					arms[j] = new Arm();
+				}
+				// arms[0].theta = PI/2;
+				// arms[1].theta = PI/2;
+			}
+
+
+			function draw() {
+				background(255);
+				r = s_r.value();
+				m = s_r.value() / 10;
+
+				//Start
+				push();
+				translate(x, y);
+				arms[0].draw(0, 0, 0, 0);
+				pop();
+				// console.log("popped out");
+
+				//Overlay
+				ovr.noFill();
+				image(ovr, 0, 0, w - 1, h - 1);
+				//Border
+				push();
+				noFill();
+				strokeWeight(borderWidth);
+				rect(borderWidth / 2, borderWidth / 2, w - borderWidth, h - borderWidth);
+				pop();
+			}
+
+
+			function Arm() {
+				this.theta = random(0, PI / 2);
+				// this.theta = 0;
+				this.omega = 0;
+				this.tau = 0;
+				this.fi = 0;
+				this.p;
+
+
+				this.draw = function (i, fi, omega, tau) {
+					this.fi = fi + this.theta;
+					if (pt[i + 1] == undefined) pt[i + 1] = 0;
+					if (pr[i + 1] == undefined) pr[i + 1] = 0;
+
+					if (i + 1 == n) {
+						this.tau = - m * g / l * sin(this.fi) - tau;
+						this.p = m * g * cos(this.fi) + m * this.omega ** 2 * l;
+					} else {
+						this.tau = pt[i + 1] / l - m * g / l * sin(this.fi) - tau;
+						this.p = pr[i + 1] + m * g * cos(this.fi) + m * this.omega ** 2 * l;
+					}
+
+
+					this.omega += this.tau;
+					this.theta += this.omega - 0 * omega;        //Should the previous omega have any effect?
+
+					pt[i] = this.p * sin(this.theta);
+					pr[i] = this.p * cos(this.theta);
+
+
+					//Actual draw
+					rotate(this.theta);
+					noStroke();
+					ellipse(0, l, 2 * r, 2 * r);
+					stroke(0);
+					strokeWeight(thk);
+					line(0, 0, 0, l);
+
+					//pK's smart recursion
+					push();
+					translate(0, l);
+					if (i + 1 < n) arms[i + 1].draw(i + 1, this.fi, this.omega, this.tau);
+					pop();
+				}
+
+			}
+		</script>
+
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.6.1/p5.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.6.1/addons/p5.dom.min.js"></script>
+	</head>
+
+	<body>
+	</body>
+
+</html>
