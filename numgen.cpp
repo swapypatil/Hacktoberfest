@@ -9,4 +9,4 @@ int main()
 		cout<<rand()<<endl;
 	}
 	
-}admc;sdvmc
+}
