@@ -10,4 +10,3 @@ int main()
 	}
 	
 }
-d,c;lda
